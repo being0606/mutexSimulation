@@ -2,48 +2,41 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#define NUM_ITERATIONS 1000000
-#define NUM_THREADS 4
+#define N 1000           // 반복 횟수
 
-int counter = 0;
-pthread_mutex_t lock;
+int counter = 0;        // 공유 변수 (초기값 0)
 
-void* producer(void* arg) {
-    for (int i = 0; i < NUM_ITERATIONS; i++) {
-        pthread_mutex_lock(&lock);
+/**Producer 함수
+ * @param arg : void 포인터
+ * @return void 포인터
+ */
+void *producer(void *arg) {
+    for (int i = 0; i < N; i++) {
         counter++;
-        pthread_mutex_unlock(&lock);
     }
     return NULL;
 }
 
-void* consumer(void* arg) {
-    for (int i = 0; i < NUM_ITERATIONS; i++) {
-        pthread_mutex_lock(&lock);
+void *consumer(void *arg) {
+    for (int i = 0; i < N; i++) {
         counter--;
-        pthread_mutex_unlock(&lock);
     }
     return NULL;
 }
 
 int main() {
-    pthread_t producer_threads[NUM_THREADS], consumer_threads[NUM_THREADS];
-    
-    pthread_mutex_init(&lock, NULL);
-    
-    for (int i = 0; i < NUM_THREADS; i++) {
-        pthread_create(&producer_threads[i], NULL, producer, NULL);
-        pthread_create(&consumer_threads[i], NULL, consumer, NULL);
-    }
-    
-    for (int i = 0; i < NUM_THREADS; i++) {
-        pthread_join(producer_threads[i], NULL);
-        pthread_join(consumer_threads[i], NULL);
-    }
-    
-    printf("Final counter value: %d\n", counter);
-    
-    pthread_mutex_destroy(&lock);
-    
+    pthread_t producer_thread, consumer_thread;
+
+    // 2개의 Thread 생성
+    pthread_create(&producer_thread, NULL, producer, NULL);
+    pthread_create(&consumer_thread, NULL, consumer, NULL);
+
+    // Thread 종료 대기
+    pthread_join(producer_thread, NULL);
+    pthread_join(consumer_thread, NULL);
+
+    // 최종 counter 값 출력
+    printf("When N is %d, Final counter value: %d\n", N, counter);
+
     return 0;
 }
